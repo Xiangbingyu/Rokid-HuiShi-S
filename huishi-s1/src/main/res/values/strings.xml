@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">HuiShi-S 1.01</string>
+    <string name="main_slogan">慧视校园</string> <!-- 主标语 -->
+    <string name="button_exitApp">退出</string> <!-- 退出应用按钮文本 -->
+    <string name="button_enterApp">进入</string> <!-- 进入应用按钮文本 -->
+</resources>
