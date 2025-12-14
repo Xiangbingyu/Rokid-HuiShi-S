@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.TextView
@@ -31,14 +32,17 @@ class PhotoCaptureActivity : AppCompatActivity() {
         private const val TAG = "PhotoCaptureActivity"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+        private const val CAPTURE_INTERVAL_MS = 1000L // 1秒拍照间隔
     }
 
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
 
-    private lateinit var cameraPreview: PreviewView
-    private lateinit var captureButton: com.google.android.material.button.MaterialButton
     private lateinit var captureHint: TextView
+    
+    private lateinit var handler: Handler
+    private lateinit var captureRunnable: Runnable
+    private var isTimerRunning = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,8 +50,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
 
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        cameraPreview = findViewById(R.id.camera_preview)
-        captureButton = findViewById(R.id.capture_button)
         captureHint = findViewById(R.id.capture_hint)
 
         if (allPermissionsGranted()) {
@@ -56,8 +58,11 @@ class PhotoCaptureActivity : AppCompatActivity() {
             requestPermissions.launch(REQUIRED_PERMISSIONS)
         }
 
-        captureButton.setOnClickListener {
+        // 初始化定时器
+        handler = Handler(mainLooper)
+        captureRunnable = Runnable {
             takePhoto()
+            handler.postDelayed(this.captureRunnable, CAPTURE_INTERVAL_MS)
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -88,11 +93,7 @@ class PhotoCaptureActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(cameraPreview.surfaceProvider)
-                }
+            
 
             imageCapture = ImageCapture.Builder()
                 .build()
@@ -105,11 +106,16 @@ class PhotoCaptureActivity : AppCompatActivity() {
                 cameraProvider.bindToLifecycle(
                     this,
                     cameraSelector,
-                    preview,
                     imageCapture
                 )
 
-                captureHint.text = "相机就绪，点击拍照"
+                captureHint.text = "相机就绪，开始拍照（每1秒一次）"
+                
+                // 启动定时器自动拍照
+                if (!isTimerRunning) {
+                    handler.post(captureRunnable)
+                    isTimerRunning = true
+                }
 
             } catch (exc: Exception) {
                 Log.e(TAG, "使用相机时发生错误: ${exc.message}", exc)
@@ -155,12 +161,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
                     val savedUri = output.savedUri ?: return
                     
                     Log.d(TAG, "照片已保存: $savedUri")
-                    
-                    Toast.makeText(
-                        this@PhotoCaptureActivity,
-                        "照片已保存到图库",
-                        Toast.LENGTH_SHORT
-                    ).show()
                 }
             }
         )
@@ -170,6 +170,11 @@ class PhotoCaptureActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // 停止定时器
+        if (isTimerRunning) {
+            handler.removeCallbacks(captureRunnable)
+            isTimerRunning = false
+        }
         cameraExecutor.shutdown()
     }
 }
