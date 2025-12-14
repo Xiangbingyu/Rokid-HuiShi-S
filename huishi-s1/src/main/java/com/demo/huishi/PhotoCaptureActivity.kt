@@ -20,7 +20,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import java.io.IOException
+
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -36,7 +36,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
 
-    // UI控件
     private lateinit var cameraPreview: PreviewView
     private lateinit var captureButton: com.google.android.material.button.MaterialButton
     private lateinit var captureHint: TextView
@@ -45,22 +44,18 @@ class PhotoCaptureActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_photo_capture)
 
-        // 保持屏幕常亮
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        // 初始化UI控件
         cameraPreview = findViewById(R.id.camera_preview)
         captureButton = findViewById(R.id.capture_button)
         captureHint = findViewById(R.id.capture_hint)
 
-        // 请求相机权限
         if (allPermissionsGranted()) {
             startCamera()
         } else {
             requestPermissions.launch(REQUIRED_PERMISSIONS)
         }
 
-        // 设置拍照按钮点击事件
         captureButton.setOnClickListener {
             takePhoto()
         }
@@ -72,12 +67,7 @@ class PhotoCaptureActivity : AppCompatActivity() {
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        var permissionGranted = true
-        permissions.entries.forEach { entry ->
-            if (entry.key in REQUIRED_PERMISSIONS && entry.value == false) {
-                permissionGranted = false
-            }
-        }
+        val permissionGranted = REQUIRED_PERMISSIONS.all { permissions[it] == true }
 
         if (permissionGranted) {
             startCamera()
@@ -87,7 +77,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
         }
     }
 
-    // 检查是否所有权限都已授予
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
     }
@@ -99,25 +88,20 @@ class PhotoCaptureActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            // 配置预览
             val preview = Preview.Builder()
                 .build()
                 .also {
                     it.setSurfaceProvider(cameraPreview.surfaceProvider)
                 }
 
-            // 配置图像捕获
             imageCapture = ImageCapture.Builder()
                 .build()
 
-            // 选择相机（后置）
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
             try {
-                // 解绑之前的相机使用情况
                 cameraProvider.unbindAll()
 
-                // 绑定相机到生命周期
                 cameraProvider.bindToLifecycle(
                     this,
                     cameraSelector,
@@ -125,7 +109,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
                     imageCapture
                 )
 
-                // 相机就绪
                 captureHint.text = "相机就绪，点击拍照"
 
             } catch (exc: Exception) {
@@ -141,7 +124,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
 
-        // 创建保存图片的文件名
         val name = SimpleDateFormat(FILENAME_FORMAT, Locale.CHINA)
             .format(System.currentTimeMillis())
         val contentValues = ContentValues().apply {
@@ -152,7 +134,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
             }
         }
 
-        // 配置图片输出选项
         val outputOptions = ImageCapture.OutputFileOptions
             .Builder(
                 contentResolver,
@@ -161,7 +142,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
             )
             .build()
 
-        // 执行拍照
         imageCapture.takePicture(
             outputOptions,
             ContextCompat.getMainExecutor(this),

@@ -30,7 +30,6 @@ import java.io.File
 
 class PhotoListActivity : AppCompatActivity() {
 
-    // 数据类和枚举
     data class MediaItem(
         val uri: Uri,
         val type: MediaType,
@@ -41,21 +40,16 @@ class PhotoListActivity : AppCompatActivity() {
         private const val DEBUG = true
         private const val TAG = "PhotoListActivity"
 
-        private fun debugLog(message: String) {
-            if (DEBUG) Log.d(TAG, message)
-        }
+        private fun debugLog(message: String) { if (DEBUG) Log.d(TAG, message) }
     }
 
-    // UI 控件
     private lateinit var latestImageView: ImageView
     private lateinit var buttonNext: MaterialButton
     private lateinit var photoCountTextView: TextView
 
-    // 数据
     private var allMediaItems = mutableListOf<MediaItem>()
     private var currentImageIndex = -1
 
-    // 工具类
     private lateinit var loadingIndicator: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -69,13 +63,8 @@ class PhotoListActivity : AppCompatActivity() {
             insets
         }
 
-        // 初始化视图
         initializeViews()
-
-        // 设置监听器
         setupListeners()
-
-        // 开始业务逻辑
         checkAndRequestPermission()
         updatePhotoCountText()
     }
@@ -88,69 +77,43 @@ class PhotoListActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        // 为“下一个”按钮设置点击事件
         buttonNext.setOnClickListener { loadNextMedia() }
     }
 
     private fun checkAndRequestPermission() {
         val permissionsToRequest = mutableListOf<String>()
 
-        // Android 12L使用传统的存储权限
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
-        if (permissionsToRequest.isNotEmpty()) {
-            requestPermissions.launch(permissionsToRequest.toTypedArray())
-        } else {
-            loadAllMediaUris()
-        }
+        permissionsToRequest.takeIf { it.isNotEmpty() }?.let {
+            requestPermissions.launch(it.toTypedArray())
+        } ?: loadAllMediaUris()
     }
 
-    private val requestPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        permissions ->
-        // Android 12L检查读取存储权限
+    private val requestPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
         val hasPermission = permissions[Manifest.permission.READ_EXTERNAL_STORAGE] == true
         
-        if (hasPermission) {
-            loadAllMediaUris()
-        } else {
+        if (hasPermission) loadAllMediaUris() else {
             Toast.makeText(this, "读取权限被拒绝，无法加载照片", Toast.LENGTH_SHORT).show()
-            finish() // 权限被拒绝，关闭页面
+            finish()
         }
     }
 
     private fun loadAllMediaUris() {
-        // 使用 lifecycleScope 启动一个协程，它会自动在 Activity 销毁时取消
         lifecycleScope.launch {
-            // 显示一个加载指示器
             showLoadingIndicator(true)
             val mediaResult = withContext(Dispatchers.IO) {
-                val imageItems = queryMedia(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    Environment.DIRECTORY_DCIM + File.separator + "Camera",
-                    MediaType.IMAGE
-                )
-                val picturesItems = queryMedia(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    Environment.DIRECTORY_PICTURES,
-                    MediaType.IMAGE
-                )
-                // 在后台合并并排序
+                val imageItems = queryMedia(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, 
+                    Environment.DIRECTORY_DCIM + File.separator + "Camera", MediaType.IMAGE)
+                val picturesItems = queryMedia(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, 
+                    Environment.DIRECTORY_PICTURES, MediaType.IMAGE)
                 (imageItems + picturesItems).sortedByDescending { it.dateTaken }
             }
-            // 隐藏加载指示器
             showLoadingIndicator(false)
             allMediaItems.clear()
             allMediaItems.addAll(mediaResult)
@@ -223,7 +186,6 @@ class PhotoListActivity : AppCompatActivity() {
 
         latestImageView.visibility = View.VISIBLE
 
-        // 加载图片
         Glide.with(this)
             .load(item.uri)
             .into(latestImageView)
