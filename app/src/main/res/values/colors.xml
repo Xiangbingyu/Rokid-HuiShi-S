@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="rgrcolor">#FF00FF00</color> <!-- 主色调，使用绿色作为示例 -->
-    <color name="rgrcolor_normal">#FF808080</color> <!-- 普通状态颜色，使用灰色作为示例 -->
-    <color name="button_stroke_color">#FF00FF00</color> <!-- 按钮描边颜色 -->
-</resources>

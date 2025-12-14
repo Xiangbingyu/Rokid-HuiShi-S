@@ -23,5 +23,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "HuiShi-S"
-include(":app")
- 
+include(":huishi-s1")
+include(":huishi-s2")
