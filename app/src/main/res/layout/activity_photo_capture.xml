@@ -11,24 +11,9 @@
     <!-- 相机预览区域 -->
     <androidx.camera.view.PreviewView
         android:id="@+id/camera_preview"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/capture_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- 图片显示区域 -->
-    <ImageView
-        android:id="@+id/captured_image"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_margin="16dp"
-        android:contentDescription="Captured image"
-        android:scaleType="fitCenter"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/capture_button"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -39,7 +24,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="点击下方按钮拍照"
+        android:text="相机初始化中..."
         android:textAlignment="center"
         android:textColor="@color/rgrcolor"
         android:textSize="20sp"
@@ -48,15 +33,17 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- 拍照按钮 -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/capture_button"
+        style="@style/Widget.App.Button.OutlinedButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
         android:text="拍照"
-        android:textSize="18sp"
+        android:layout_marginBottom="4dp"
+        app:cornerRadius="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeWidth="2px" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

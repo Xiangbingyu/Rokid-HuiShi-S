@@ -4,16 +4,11 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
-import android.view.View
-import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,13 +20,6 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -50,8 +38,7 @@ class PhotoCaptureActivity : AppCompatActivity() {
 
     // UI控件
     private lateinit var cameraPreview: PreviewView
-    private lateinit var capturedImage: ImageView
-    private lateinit var captureButton: Button
+    private lateinit var captureButton: com.google.android.material.button.MaterialButton
     private lateinit var captureHint: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +50,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
 
         // 初始化UI控件
         cameraPreview = findViewById(R.id.camera_preview)
-        capturedImage = findViewById(R.id.captured_image)
         captureButton = findViewById(R.id.capture_button)
         captureHint = findViewById(R.id.capture_hint)
 
@@ -139,8 +125,12 @@ class PhotoCaptureActivity : AppCompatActivity() {
                     imageCapture
                 )
 
+                // 相机就绪
+                captureHint.text = "相机就绪，点击拍照"
+
             } catch (exc: Exception) {
                 Log.e(TAG, "使用相机时发生错误: ${exc.message}", exc)
+                captureHint.text = "相机启动失败"
                 Toast.makeText(this, "相机启动失败", Toast.LENGTH_SHORT).show()
             }
 
@@ -186,9 +176,6 @@ class PhotoCaptureActivity : AppCompatActivity() {
                     
                     Log.d(TAG, "照片已保存: $savedUri")
                     
-                    // 显示拍摄的照片
-                    showCapturedImage(savedUri)
-                    
                     Toast.makeText(
                         this@PhotoCaptureActivity,
                         "照片已保存到图库",
@@ -199,29 +186,7 @@ class PhotoCaptureActivity : AppCompatActivity() {
         )
     }
 
-    // 显示拍摄的照片
-    private fun showCapturedImage(uri: Uri) {
-        cameraPreview.visibility = View.GONE
-        capturedImage.visibility = View.VISIBLE
-        captureHint.text = "拍摄完成！"
-        
-        lifecycleScope.launch(Dispatchers.IO) {
-            val bitmap = try {
-                contentResolver.openInputStream(uri)?.use { inputStream ->
-                    BitmapFactory.decodeStream(inputStream)
-                }
-            } catch (e: IOException) {
-                Log.e(TAG, "加载图片失败: ${e.message}", e)
-                null
-            }
-            
-            withContext(Dispatchers.Main) {
-                if (bitmap != null) {
-                    capturedImage.setImageBitmap(bitmap)
-                }
-            }
-        }
-    }
+
 
     override fun onDestroy() {
         super.onDestroy()

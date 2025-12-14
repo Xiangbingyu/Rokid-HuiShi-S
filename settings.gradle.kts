@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HuiShi"
+rootProject.name = "HuiShi-S"
 include(":app")
  
